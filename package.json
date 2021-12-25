@@ -1,0 +1,33 @@
+{
+  "name": "opencore-z370-taichi",
+  "version": "0.0.0",
+  "description": "The OpenCore config for ASRock Z370 Taichi",
+  "main": "index.js",
+  "scripts": {
+    "commit": "commit",
+    "release": "standard-version --help",
+    "rel:dr": "standard-version --dry-run",
+    "rel:version": "standard-version",
+    "pub:github": "conventional-github-releaser -v",
+    "pub:npm": "npm publish",
+    "postinstall": "pnpm husky install"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/initdc/OpenCore-Z370-Taichi.git"
+  },
+  "author": "initdc",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/initdc/OpenCore-Z370-Taichi/issues"
+  },
+  "homepage": "https://github.com/initdc/OpenCore-Z370-Taichi#readme",
+  "devDependencies": {
+    "@commitlint/cli": "^15.0.0",
+    "@commitlint/config-conventional": "^15.0.0",
+    "@commitlint/prompt-cli": "^15.0.0",
+    "conventional-github-releaser": "^3.1.5",
+    "husky": "^7.0.4",
+    "standard-version": "^9.3.2"
+  }
+}
