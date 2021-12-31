@@ -1,6 +1,6 @@
 {
   "name": "opencore-z370-taichi",
-  "version": "0.0.0",
+  "version": "0.6.7-igpu",
   "description": "The OpenCore config for ASRock Z370 Taichi",
   "main": "index.js",
   "scripts": {
