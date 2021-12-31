@@ -155,18 +155,6 @@ private:
 	static constexpr const char *RequestedExternalSwitchOffArg {"-wegnoegpu"};
 
 	/**
-	 *  The boot-arg to force-disable any internal GPU if found.
-	 *  For user configuration only! Use requestedInternalSwitchOff!
-	 */
-	static constexpr const char *RequestedInternalSwitchOffArg {"-wegnoigpu"};
-
-	/**
-	 *  The boot-arg to force-disable any internal GPU if external GPU found.
-	 *  For user configuration only! Use requestedGpuSwitch!!
-	 */
-	static constexpr const char *RequestedGpuSwitchArg {"-wegswitchgpu"};
-
-	/**
 	 *  The property to set your platform id for Intel drivers (Ivy and newer).
 	 *  For user configuration only! Use reportedFramebufferName!
 	 */
@@ -180,34 +168,9 @@ private:
 
 	/**
 	 *  The IGPU property to force-disable any external GPU if found.
-	 *  For user configuration only! Use processSwitchOff()!
+	 *  For user configuration only! Use requestedExternalSwitchOff!
 	 */
 	static constexpr const char *RequestedExternalSwitchOffName {"disable-external-gpu"};
-
-	/**
-	 *  The IGPU property to force-disable the IGPU if any external GPU is found.
-	 *  For user configuration only! Use processSwitchOff()!
-	 */
-	static constexpr const char *RequestedGpuSwitchName {"switch-to-external-gpu"};
-
-	/**
-	 *  The GPU property to force-disable any external or internal GPU.
-	 *  For user configuration only! Use processSwitchOff()!
-	 */
-	static constexpr const char *RequestedGpuSwitchOffName {"disable-gpu"};
-
-	/**
-	 *  The GPU property to force-disable any this external GPU with minimum kernel version (inclusive).
-	 *  For user configuration only! Use processSwitchOff()!
-	 */
-	static constexpr const char *RequestedGpuSwitchOffMinKernelName {"disable-gpu-min"};
-
-	/**
-	 *  The GPU property to force-disable any this external GPU with maximum kernel version (inclusive).
-	 *  For user configuration only! Use processSwitchOff()!
-	 */
-	static constexpr const char *RequestedGpuSwitchOffMaxKernelName {"disable-gpu-max"};
-
 
 	/**
 	 *  Known platform ids used by Intel GPU kexts
@@ -300,15 +263,6 @@ public:
 	bool requestedExternalSwitchOff {false};
 
 	/**
-	 *  Requested internal GPU switchoff
-	 */
-	bool requestedInternalSwitchOff {false};
-
-	/**
-	 *  Requested GPU switch
-	 */
-	bool requestedGpuSwitch {false};
-	/**
 	 *  Allocate and initialise cached device list.
 	 *
 	 *  @return device list or nullptr
@@ -328,11 +282,6 @@ public:
 	 *  @param d  device list
 	 */
 	EXPORT static void deleter(DeviceInfo *d NONNULL);
-
-	/**
-	 *  Perform device switch-off as prescribed by the properties injected.
-	 */
-	EXPORT void processSwitchOff();
 };
 
 /**
@@ -418,11 +367,6 @@ public:
 	 *  CPU max level (ext)
 	 */
 	uint32_t cpuMaxLevelExt {0x80000000};
-
-	/**
-	 *  AVX 2.0 support
-	 */
-	bool cpuHasAvx2 {false};
 
 	/**
 	 *  Obtain base device info.

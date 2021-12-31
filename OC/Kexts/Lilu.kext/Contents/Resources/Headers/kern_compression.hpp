@@ -23,7 +23,6 @@ namespace Compression {
 	static constexpr uint32_t Magic {0x706D6F63}; //comp
 	static constexpr uint32_t ModeLZVN {0x6E767A6C}; //lzvn
 	static constexpr uint32_t ModeLZSS {0x73737A6C}; //lzss
-	static constexpr uint32_t ModeZLIB {0x9C787A6C}; //zlib
 
 	/**
 	 *  Compressed header structure
@@ -39,7 +38,7 @@ namespace Compression {
 	};
 
 	/**
-	 *  Typed decompressing function (currently for lzvn, lzss, and zlib)
+	 *  Typed decompressing function (currently for lzvn and lzss)
 	 *
 	 *  @param compression compression type
 	 *  @param dstlen      decompression buffer size
@@ -50,19 +49,6 @@ namespace Compression {
 	 *  @return decompressed buffer (must be freeded by Buffer::deleter if not preallocated)
 	 */
 	EXPORT uint8_t *decompress(uint32_t compression, uint32_t dstlen, const uint8_t *src, uint32_t srclen, uint8_t *buffer=nullptr);
-
-	/**
-	 *  Typed decompressing function (currently for lzvn, lzss, and zlib)
-	 *
-	 *  @param compression compression type
-	 *  @param dstlen      decompression buffer size, actual decompressed size on success
-	 *  @param src         compressed data
-	 *  @param srclen      compressed data size
-	 *  @param buffer      preallocated buffer to use
-	 *
-	 *  @return decompressed buffer (must be freeded by Buffer::deleter if not preallocated)
-	 */
-	EXPORT uint8_t *decompress(uint32_t compression, uint32_t *dstlen, const uint8_t *src, uint32_t srclen, uint8_t *buffer=nullptr);
 
 	/**
 	 *  Typed compressing function (currently for lzss)

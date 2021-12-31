@@ -9,15 +9,8 @@
 #define kern_disasm_hpp
 
 #include <Headers/kern_config.hpp>
-#include <Headers/kern_util.hpp>
-
-#if defined(__i386__)
-#include <Headers/hde32.h>
-#elif defined(__x86_64__)
 #include <Headers/hde64.h>
-#else
-#error Unsupported arch.
-#endif
+#include <Headers/kern_util.hpp>
 
 #ifdef LILU_ADVANCED_DISASSEMBLY
 #ifndef CAPSTONE_HAS_OSXKERNEL
@@ -48,16 +41,6 @@ class Disassembler {
 	static constexpr size_t MaxInstruction {15};
 public:
 
-#if defined(__i386__)
-	using hde_t = hde32s;
-	static constexpr auto hde_disasm = hde32_disasm;
-#elif defined(__x86_64__)
-	using hde_t = hde64s;
-	static constexpr auto hde_disasm = hde64_disasm;
-#else
-#error Unsupported arch.
-#endif
-
 	/**
 	 *  Return the real instruction size contained within min bytes
 	 *  Unlike instructionSize this uses HDE engine and at the cost of reduced compatibility it is much faster
@@ -71,8 +54,7 @@ public:
 	EXPORT static size_t quickInstructionSize(mach_vm_address_t ptr, size_t min);
 
 	/* Note, code should point to at least 32 valid bytes. */
-	EXPORT static size_t hdeDisasm(mach_vm_address_t code, hde_t *hs);
-
+	EXPORT static size_t hdeDisasm(mach_vm_address_t code, hde64s *hs);
 #ifdef LILU_ADVANCED_DISASSEMBLY
 
 	/**

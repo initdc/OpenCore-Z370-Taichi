@@ -80,7 +80,7 @@ public:
 #ifdef LILU_KEXTPATCH_SUPPORT
 	struct KextInfo {
 		static constexpr size_t Unloaded {0};
-		enum SysFlags : uint64_t {
+		enum SysFlags : size_t {
 			Loaded,      // invoke for kext if it is already loaded
 			Reloadable,  // allow the kext to unload and get patched again
 			Disabled,    // do not load this kext (formerly achieved pathNum = 0, this no longer works)
@@ -89,7 +89,7 @@ public:
 			Reserved,
 			SysFlagNum,
 		};
-		static constexpr uint64_t UserFlagNum {sizeof(uint64_t)-SysFlagNum};
+		static constexpr size_t UserFlagNum {sizeof(size_t)-SysFlagNum};
 		static_assert(UserFlagNum > 0, "There should be at least one user flag");
 		const char *id {nullptr};
 		const char **paths {nullptr};
@@ -107,7 +107,7 @@ public:
 		}
 	};
 
-	static_assert(sizeof(KextInfo) == 4 * sizeof(size_t) + sizeof(uint64_t), "KextInfo is no longer ABI compatible");
+	static_assert(sizeof(KextInfo) == 5 * sizeof(size_t), "KextInfo is no longer ABI compatible");
 #endif /* LILU_KEXTPATCH_SUPPORT */
 
 	/**
@@ -613,14 +613,6 @@ public:
 
 		return false;
 	}
-	
-	/**
-	 *  Simple find and replace in kernel memory but require both `find` and `replace` buffers to have the same length
-	 */
-	template <size_t N>
-	static inline bool findAndReplace(void *data, size_t dataSize, const uint8_t (&find)[N], const uint8_t (&replace)[N]) {
-		return findAndReplace(data, dataSize, find, N, replace, N);
-	}
 
 private:
 	/**
@@ -656,12 +648,11 @@ private:
 	/**
 	 *  Read previous jump destination from function
 	 *
-	 *  @param from          formerly routed function
-	 *  @param jumpType previous jump type
+	 *  @param from         formerly routed function
 	 *
 	 *  @return wrapper pointer on success or 0
 	 */
-	mach_vm_address_t readChain(mach_vm_address_t from, JumpType &jumpType);
+	mach_vm_address_t readChain(mach_vm_address_t from);
 
 	/**
 	 *  Created routed trampoline page
@@ -709,52 +700,27 @@ private:
 
 #ifdef LILU_KEXTPATCH_SUPPORT
 	/**
-	 *  Process loaded kext
+	 *  Called at kext loading and unloading if kext listening is enabled
 	 */
-	void processKext(kmod_info_t *kmod, bool loaded);
-	
+	static void onKextSummariesUpdated();
+
+	/**
+	 *  A pointer to loaded kext information
+	 */
+	OSKextLoadedKextSummaryHeaderAny **loadedKextSummaries {nullptr};
+
+	/**
+	 *  A pointer to kext summaries update
+	 */
+	void (*orgUpdateLoadedKextSummaries)(void) {nullptr};
+
 	/**
 	 *  Process already loaded kexts once at the start
 	 *
+	 *  @param summaries loaded kext summaries
+	 *  @param num       number of loaded kext summaries
 	 */
-	void processAlreadyLoadedKexts();
-
-	/**
-	 *  Pointer to loaded kmods for kexts
-	 */
-	kmod_info_t **kextKmods {nullptr};
-
-	/**
-	 *  Called at kext unloading if kext listening is enabled on macOS 10.6 and newer
-	 */
-	static OSReturn onOSKextUnload(void *thisKext);
-
-	/**
-	 *  A pointer to OSKext::unload()
-	 */
-	mach_vm_address_t orgOSKextUnload {};
-
-	/**
-	 *  Called at kext loading and unloading if kext listening is enabled on macOS 10.6 and newer
-	 */
-	static void onOSKextSaveLoadedKextPanicList();
-
-	/**
-	 *  A pointer to OSKext::saveLoadedKextPanicList()
-	 */
-	mach_vm_address_t orgOSKextSaveLoadedKextPanicList {};
-	
-#if defined(__i386__)
-	/**
-	 *  Called at kext loading if kext listening is enabled on macOS 10.4 and 10.5
-	 */
-	static kern_return_t onKmodCreateInternal(kmod_info_t *kmod, kmod_t *id);
-	
-	/**
-	 *  A pointer to kmod_create_internal()
-	 */
-	mach_vm_address_t orgKmodCreateInternal {};
-#endif
+	void processAlreadyLoadedKexts(OSKextLoadedKextSummaryHeaderAny *summaries, size_t num);
 
 #endif /* LILU_KEXTPATCH_SUPPORT */
 
@@ -785,9 +751,9 @@ private:
 	bool waitingForAlreadyLoadedKexts {false};
 
 	/**
-	 *  Flag to prevent kext processing during an unload
+	 *  Number of processed kext summaries
 	 */
-	bool isKextUnloading {false};
+	uint32_t numSummaries {0};
 
 #endif /* LILU_KEXTPATCH_SUPPORT */
 
@@ -801,7 +767,7 @@ private:
 	 *  Jump instruction sizes
 	 */
 	static constexpr size_t SmallJump {1 + sizeof(int32_t)};
-	static constexpr size_t LongJump {6 + sizeof(uintptr_t)};
+	static constexpr size_t LongJump {6 + sizeof(uint64_t)};
 	static constexpr size_t MediumJump {6};
 	static constexpr uint8_t SmallJumpPrefix {0xE9};
 	static constexpr uint16_t LongJumpPrefix {0x25FF};
@@ -811,12 +777,12 @@ private:
 	 */
 	union FunctionPatch {
 		struct PACKED LongPatch {
-			uint16_t  opcode;
-			uint32_t  argument;
-			uintptr_t disp;
-			uint8_t   org[sizeof(uint64_t) - sizeof(uintptr_t) + sizeof(uint16_t)];
+			uint16_t opcode;
+			uint32_t argument;
+			uint64_t disp;
+			uint8_t  org[2];
 		} l;
-		static_assert(sizeof(l) == (sizeof(uint64_t) * 2), "Invalid long patch rounding");
+		static_assert(sizeof(l) == sizeof(unsigned __int128), "Invalid long patch rounding");
 		struct PACKED MediumPatch {
 			uint16_t opcode;
 			uint32_t argument;
@@ -836,16 +802,14 @@ private:
 				reinterpret_cast<volatile T *>(this)->org[i] = *reinterpret_cast<uint8_t *>(source + offsetof(T, org) + i);
 		}
 		uint64_t value64;
-#if defined(__x86_64__)
 		unsigned __int128 value128;
-#endif
 	} patch;
 
 	/**
 	 *  Possible kernel paths
 	 */
 #ifdef LILU_COMPRESSION_SUPPORT
-	const char *prelinkKernelPaths[7] {
+	const char *prelinkKernelPaths[6] {
 		// This is the usual kernel cache place, which often the best thing to use
 		"/System/Library/Caches/com.apple.kext.caches/Startup/kernelcache",
 		// Otherwise fallback to one of the prelinked kernels
@@ -854,8 +818,7 @@ private:
 		"/macOS Install Data/Locked Files/Boot Files/prelinkedkernel", // 10.13 installer
 		"/com.apple.boot.R/prelinkedkernel", // 10.12+ fusion drive installer
 		"/com.apple.boot.S/System/Library/PrelinkedKernels/prelinkedkernel", // 10.11 fusion drive installer
-		"/com.apple.recovery.boot/prelinkedkernel", // recovery
-		"/kernelcache" // 10.7 installer
+		"/com.apple.recovery.boot/prelinkedkernel" // recovery
 	};
 #endif
 

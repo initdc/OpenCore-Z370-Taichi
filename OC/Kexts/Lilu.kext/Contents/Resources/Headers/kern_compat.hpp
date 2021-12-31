@@ -9,7 +9,6 @@
 #define kern_compat_hpp
 
 #include <Headers/kern_config.hpp>
-#include <stdint.h>
 
 // Legacy compatibility layer created to avoid 10.13 SDK macros
 // unsupported in older systems and improperly guarded due to
@@ -27,16 +26,6 @@
 // This may not be nice but will protect users from changes in KernInfo strcture.
 #ifndef LILU_DISABLE_BRACE_WARNINGS
 #pragma clang diagnostic error "-Wmissing-braces"
-#endif
-
-#if defined(__i386__)
-#define lilu_strtou	strtoul
-
-#elif defined(__x86_64__)
-#define lilu_strtou	strtouq
-
-#else
-#error Unsupported arch.
 #endif
 
 #endif /* kern_compat_hpp */

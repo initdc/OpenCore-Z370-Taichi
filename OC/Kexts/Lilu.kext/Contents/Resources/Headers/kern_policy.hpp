@@ -17,7 +17,6 @@
 #include <security/mac_policy.h>
 #include <Headers/kern_util.hpp>
 
-#if defined(__x86_64__)
 class Policy {
 	/**
 	 *  TrustedBSD Policy handle
@@ -62,6 +61,5 @@ public:
 	 */
 	EXPORT bool unregisterPolicy();
 };
-#endif
 
 #endif /* kern_policy_hpp */
